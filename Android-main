@@ -1,0 +1,91 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Flutter Demo',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: const MyHomePage(
+        title: 'IOT Counter',
+      ),
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({Key? key, required this.title}) : super(key: key);
+
+  final String title;
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  Object _counter = 0;
+  DatabaseReference ref = FirebaseDatabase.instance.ref("sayac");
+  DatabaseReference refx = FirebaseDatabase.instance.ref();
+
+  void _incrementCounter() async {
+    await refx.update({
+      "sayac": 0,
+    });
+  }
+
+  @override
+  void initState() {
+    readData();
+    super.initState();
+  }
+
+  readData() async {
+    DatabaseEvent event = await ref.once();
+    print(event.snapshot.value);
+    Stream<DatabaseEvent> stream = ref.onValue;
+    stream.listen((DatabaseEvent event) {
+      print('Event Type: ${event.type.name}');
+      print('Snapshot: ${event.snapshot.value}');
+      _counter = event.snapshot.value.toString();
+      setState(() {});
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(
+              '$_counter',
+              style: Theme.of(context).textTheme.headline4,
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _incrementCounter,
+        tooltip: 'Increment',
+        child: const Icon(Icons.clear),
+      ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+}
