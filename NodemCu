@@ -1,0 +1,44 @@
+#include "FirebaseESP8266.h"
+#include <ESP8266WiFi.h>
+
+//1. Firebase veritabanı adresini, Token bilgisini ve ağ adresi bilgilerinizi giriniz.
+#define FIREBASE_HOST "iots-1d65b-default-rtdb.firebaseio.com"
+#define FIREBASE_AUTH "s96Fwii1Q4mNGDSbD2O9WHgqteClOPS0gqEBYC9L"
+//Bağlanılacak olan ağ ıd ve şifresini giriyoruz
+//#define WIFI_SSID "No_7"
+//#define WIFI_PASSWORD "aabbcc1122"
+#define WIFI_SSID "dri"
+#define WIFI_PASSWORD "40974097"
+#define MZ80 D4
+
+//2. veritabanim adında bir firebase veritabanı nesnesi oluşturuyoruz
+FirebaseData veritabanim;
+
+
+void setup()
+{
+  pinMode (MZ80, INPUT);
+  Serial.begin(115200);
+
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  Serial.println(WiFi.localIP()); //bağlandığımız ağın ip adresini alıyoruz
+
+
+  Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);//Firebase bağlantısı başlatılıyor
+  Firebase.reconnectWiFi(true);// Ağ bağlantısı kesilirse tekrar bağlanmasına izin veriyoruz
+}
+float result=0; // geçen ürünleri sayacağımız sayaç değişkenimiz.
+bool cntrl=false; // ürün bandımızda herhangi bir sebepten dolayı durma meydana gelirse ürün miktarı arttırmıyoruz 
+//sensör önünde bulunan bir nesne yoksa false değeri döndürüyoruz.
+void loop()
+{
+  int durum=digitalRead(MZ80);
+  if (durum==0){
+    if(cntrl){
+      result++; 
+      Firebase.setFloat(veritabanim,"sayac",result);
+      cntrl=false;
+    }
+  }
+  else cntrl=true;
+}
